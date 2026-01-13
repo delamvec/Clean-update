@@ -98,13 +98,19 @@ if (IsPC() && pkVictim->IsPC() && iRet == BATTLE_DAMAGE)
 4. **ApplyKnockback() se zavolá:**
    - Vypočítá směr: B je na východ od A → push na východ
    - Vypočítá novou pozici: current + 300px na východ
-   - Teleportuje B na novou pozici
-   - Aplikuje Stun() na B
-5. **Stun() nastaví INSTANT_FLAG_STUN**
-6. **Hráč B spadne na zem** (client animace)
+   - **Zavolá Stun() FIRST** - nastaví INSTANT_FLAG_STUN + pošle packet VŠEM včetně B
+   - **Zavolá Stop()** - okamžitě zastaví všechny akce hráče B
+   - **Zavolá Sync()** - force position update na novou pozici
+5. **Hráč B client obdrží stun packet** - zobrazí knockdown animaci
+6. **Hráč B spadne na zem** (client animace) **u VŠECH hráčů včetně B**
 7. **IsStun() vrací true** → všechny kontroly v input_main.cpp blokují akce
 8. **Po 3 sekundách** → StunEvent zavolá Dead() → respawn/recovery
 9. **Hráč B se zvedne** automaticky
+
+### ✅ Oprava desyncu (commit c8e1513):
+- **Stun() nyní posílá packet i sobě** pomocí `GetDesc()->Packet()`
+- **Pořadí:** Stun() → Stop() → Sync() (ne Sync() → Stun())
+- **Důsledek:** Oba hráči (A i B) vidí knockdown ve stejný čas
 
 ## 🎯 Výsledek
 

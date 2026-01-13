@@ -1259,6 +1259,10 @@ void CInputMain::Position(LPCHARACTER ch, const char * data)
 {
 	struct command_position * pinfo = (struct command_position *) data;
 
+	// ✅ Block position changes if player is stunned (knocked down) or dead
+	if (ch->IsStun() || ch->IsDead())
+		return;
+
 	switch (pinfo->position)
 	{
 		case POSITION_GENERAL:

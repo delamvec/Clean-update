@@ -49,9 +49,29 @@ else
 
 ## Řešení
 
-Přidána kontrola `IsStun()` a `IsDead()` na začátek obou handleů:
+Přidána kontrola `IsStun()` a `IsDead()` na **3 kritická místa** v input_main.cpp:
 
-### 1. FUNC_MOVE handler (řádek 1620-1622):
+### 1. Position() handler (řádek 1262-1264): ⭐ **NEJDŮLEŽITĚJŠÍ**
+```cpp
+void CInputMain::Position(LPCHARACTER ch, const char * data)
+{
+    struct command_position * pinfo = (struct command_position *) data;
+
+    // ✅ OPRAVA: Block position changes if player is stunned or dead
+    if (ch->IsStun() || ch->IsDead())
+        return;
+
+    switch (pinfo->position)
+    {
+        case POSITION_GENERAL:
+            ch->Standup();  // Toto volal client při zmáčknutí klávesy!
+            break;
+        // ...
+    }
+}
+```
+
+### 2. FUNC_MOVE handler (řádek 1620-1622):
 ```cpp
 if (pinfo->bFunc == FUNC_MOVE)
 {
@@ -68,7 +88,7 @@ if (pinfo->bFunc == FUNC_MOVE)
 }
 ```
 
-### 2. Actions handler (řádek 1631-1633):
+### 3. Actions handler (řádek 1631-1633):
 ```cpp
 else
 {
@@ -89,8 +109,9 @@ else
 ## Upravené soubory
 
 ### input_main.cpp
-- **Řádek 1620-1622**: Přidána kontrola stun/dead před pohybem
-- **Řádek 1631-1633**: Přidána kontrola stun/dead před útokem/skillem
+- **Řádek 1262-1264**: Přidána kontrola stun/dead v Position() - **kritické!**
+- **Řádek 1620-1622**: Přidána kontrola stun/dead před pohybem (Move FUNC_MOVE)
+- **Řádek 1631-1633**: Přidána kontrola stun/dead před útokem/skillem (Move actions)
 
 ## Výsledek
 

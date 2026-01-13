@@ -352,6 +352,37 @@ bool CHARACTER::Attack(LPCHARACTER pkVictim, BYTE bType)
 		if (BATTLE_DEAD == iRet && IsPC())
 			SetVictim(NULL);
 
+		// ✅ Knockback system - aplikuj knockback na poslední combo hity
+		// bType >= 17: Poslední combo hity (finální údery v řetězci)
+		// Knockback se aplikuje jen na živé oběti (ne při smrti)
+		if (IsPC() && pkVictim->IsPC() && iRet == BATTLE_DAMAGE)
+		{
+			// Poslední combo hity: bType 17, 18, 19, 20
+			// Pro skills můžeš přidat další podmínky podle dwSkillVnum
+			bool bShouldKnockback = false;
+
+			if (bType >= 17 && bType <= 20)
+			{
+				// Poslední combo hit - silný knockback
+				bShouldKnockback = true;
+			}
+			// TODO: Můžeš přidat zde kontrolu pro specifické skills:
+			// else if (bType == SKILL_VNUM && CKnockbackManager::Instance().DoesSkillHaveKnockback(bType))
+			// {
+			//     bShouldKnockback = true;
+			// }
+
+			if (bShouldKnockback)
+			{
+				// Aplikuj knockback: 300 pixelů = 3 metry odhodí oběť
+				pkVictim->ApplyKnockback(this, 300.0f);
+
+				if (test_server)
+					sys_log(0, "Knockback applied: %s -> %s (bType %d)",
+						GetName(), pkVictim->GetName(), bType);
+			}
+		}
+
 		return true;
 	}
 
@@ -514,6 +545,47 @@ void CHARACTER::Stun()
 	info->ch = this;
 
 	m_pkStunEvent = event_create(StunEvent, info, PASSES_PER_SEC(3));
+}
+
+// ✅ Knockback implementation - odhodí oběť od útočníka a aplikuje stun
+void CHARACTER::ApplyKnockback(LPCHARACTER pkAttacker, float fDistance)
+{
+	if (!pkAttacker)
+		return;
+
+	if (IsStun())  // Již je stunnnutý
+		return;
+
+	if (IsDead())  // Již je mrtvý
+		return;
+
+	// Vypočítej směr od útočníka k oběti
+	float dx = (float)(GetX() - pkAttacker->GetX());
+	float dy = (float)(GetY() - pkAttacker->GetY());
+
+	// Normalizuj směr
+	float fLen = sqrtf(dx * dx + dy * dy);
+
+	if (fLen < 1.0f)
+		fLen = 1.0f;  // Prevence dělení nulou
+
+	dx /= fLen;
+	dy /= fLen;
+
+	// Vypočítej novou pozici (posunout o fDistance v opačném směru od útočníka)
+	long lNewX = GetX() + (long)(dx * fDistance);
+	long lNewY = GetY() + (long)(dy * fDistance);
+
+	if (test_server)
+		sys_log(0, "ApplyKnockback: %s pushed from (%ld,%ld) to (%ld,%ld) by %s (dist %.1f)",
+			GetName(), GetX(), GetY(), lNewX, lNewY, pkAttacker->GetName(), fDistance);
+
+	// Teleportuj oběť na novou pozici pomocí WarpSet
+	WarpSet(lNewX, lNewY);
+
+	// Aplikuj stun efekt (pád na zem)
+	// DŮLEŽITÉ: Stun() MUSÍ být po WarpSet(), aby se postava zastavila na nové pozici
+	Stun();
 }
 
 EVENTINFO(SCharDeadEventInfo)

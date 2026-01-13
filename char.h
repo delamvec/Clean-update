@@ -1252,6 +1252,7 @@ class CHARACTER : public CEntity, public CFSM, public CHorseRider
 
 		bool				IsStun() const;
 		void				Stun();
+		void				ApplyKnockback(LPCHARACTER pkAttacker, float fDistance = 300.0f);
 		bool				IsDead() const;
 		void				Dead(LPCHARACTER pkKiller = NULL, bool bImmediateDead=false);
 

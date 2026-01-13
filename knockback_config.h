@@ -1,6 +1,10 @@
 #ifndef __INC_KNOCKBACK_CONFIG_H__
 #define __INC_KNOCKBACK_CONFIG_H__
 
+// ⚠️ POZNÁMKA: Tento soubor je připraven pro budoucí implementaci selective knockbacku
+// Aktuálně NENÍ POUŽÍVÁN v char_battle.cpp
+// Pro aktivaci knockbacku je potřeba upravit Attack() funkci v char_battle.cpp
+
 // Typy útoků
 enum EAttackKnockbackType
 {

@@ -1,4 +1,4 @@
-# 🛠️ Návod na kompilaci - Lag-Compensated Combat System
+# 🛠️ Návod na kompilaci - Lag-Compensated Combat System + Knockdown Fix
 
 ## 📋 Přehled souborů
 
@@ -9,7 +9,7 @@ char.h
 char_battle.cpp
 char_position_history.cpp  ← NOVÝ
 char_position_history.h    ← NOVÝ
-input_main.cpp
+input_main.cpp             ← UPRAVENÝ (lag compensation + knockdown fix)
 packet.h
 input.h
 ```
@@ -316,7 +316,8 @@ A: Knockback není aktivní. Je to volitelná funkce pro budoucnost.
 
 ## 📚 Další dokumenty
 
-- `CHANGELOG_LAG_COMPENSATION.md` - Detailní seznam změn
+- `CHANGELOG_LAG_COMPENSATION.md` - Detailní seznam změn lag compensation
+- `KNOCKDOWN_FIX.md` - Dokumentace opravy instant recovery z knockdown
 - `KNOCKBACK_ANALYSIS.md` - Původní analýza problému
 - `LAG_COMPENSATED_COMBAT_SOLUTION.md` - Kompletní návrh
 

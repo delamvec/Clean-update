@@ -1617,6 +1617,10 @@ void CInputMain::Move(LPCHARACTER ch, const char * data)
 		if (ch->GetLimitPoint(POINT_MOV_SPEED) == 0)
 			return;
 
+		// ✅ Block movement if player is stunned (knocked down) or dead
+		if (ch->IsStun() || ch->IsDead())
+			return;
+
 		ch->SetRotation(pinfo->bRot * 5);	// �ߺ� �ڵ�
 		ch->ResetStopTime();				// ""
 
@@ -1624,6 +1628,10 @@ void CInputMain::Move(LPCHARACTER ch, const char * data)
 	}
 	else
 	{
+		// ✅ Block all actions (attack, combo, skill) if player is stunned or dead
+		if (ch->IsStun() || ch->IsDead())
+			return;
+
 		if (pinfo->bFunc == FUNC_ATTACK || pinfo->bFunc == FUNC_COMBO)
 			ch->OnMove(true);
 		else if (pinfo->bFunc & FUNC_SKILL)

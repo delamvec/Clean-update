@@ -533,7 +533,12 @@ void CHARACTER::Stun()
 	TPacketGCStun pack;
 	pack.header	= HEADER_GC_STUN;
 	pack.vid	= m_vid;
-	PacketAround(&pack, sizeof(pack));
+
+	// ✅ Pošli packet VŠEM včetně sebe (aby client hráče B věděl že je stunnnutý)
+	PacketAround(&pack, sizeof(pack));  // Okolní hráči
+
+	if (GetDesc())  // A taky sobě!
+		GetDesc()->Packet(&pack, sizeof(pack));
 
 	SET_BIT(m_pointsInstant.instant_flag, INSTANT_FLAG_STUN);
 
@@ -580,12 +585,22 @@ void CHARACTER::ApplyKnockback(LPCHARACTER pkAttacker, float fDistance)
 		sys_log(0, "ApplyKnockback: %s pushed from (%ld,%ld) to (%ld,%ld) by %s (dist %.1f)",
 			GetName(), GetX(), GetY(), lNewX, lNewY, pkAttacker->GetName(), fDistance);
 
-	// Teleportuj oběť na novou pozici pomocí WarpSet
-	WarpSet(lNewX, lNewY);
-
-	// Aplikuj stun efekt (pád na zem)
-	// DŮLEŽITÉ: Stun() MUSÍ být po WarpSet(), aby se postava zastavila na nové pozici
+	// ⚠️ DŮLEŽITÉ POŘADÍ:
+	// 1. Nejdřív aplikuj stun (nastaví flag + pošle packet)
 	Stun();
+
+	// ✅ Force stop všech akcí OKAMŽITĚ
+	Stop();
+	StopStaminaConsume();
+
+	// 2. Pak teleportuj (pomocí Sync pro force position update)
+	// Sync() pošle position packet všem včetně sebe
+	if (!Sync(lNewX, lNewY))
+	{
+		// Pokud Sync selže, použij WarpSet jako fallback
+		WarpSet(lNewX, lNewY);
+	}
+}
 }
 
 EVENTINFO(SCharDeadEventInfo)
